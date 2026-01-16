@@ -220,6 +220,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 runOnUiThread {
                     viewBinding.bannerCard.visibility = android.view.View.GONE
+                    viewBinding.stackingLogText.visibility = android.view.View.GONE
                     viewBinding.imageCaptureButton.isEnabled = true
                     
                     if (resultUri != null) {
