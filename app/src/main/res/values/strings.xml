@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Zero blur camera</string>
-</resources>
+    <string name="settings_aspect_ratio_title">Aspect Ratio</string>
+    <string name="aspect_ratio_full_image">Full image (4:3)</string>
+    <string name="aspect_ratio_wide_crop">Wide crop</string>
+    <string name="settings_keep_intermediate">Keep intermediate pictures</string>
+

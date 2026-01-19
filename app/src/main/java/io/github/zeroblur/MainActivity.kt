@@ -30,6 +30,10 @@ import android.widget.CheckBox
 import android.widget.FrameLayout
 import android.view.ViewGroup
 import android.content.Context
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
@@ -371,7 +375,19 @@ class MainActivity : AppCompatActivity() {
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
+            // Get aspect ratio preference
+            val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
+            val aspectRatio = prefs.getString("aspect_ratio", "full") ?: "full"
+            
+            // Set aspect ratio: 4:3 for full image, 16:9 for wide crop
+            val aspectRatioValue = if (aspectRatio == "wide") {
+                androidx.camera.core.AspectRatio.RATIO_16_9
+            } else {
+                androidx.camera.core.AspectRatio.RATIO_4_3
+            }
+
             val preview = Preview.Builder()
+                .setTargetAspectRatio(aspectRatioValue)
                 .build()
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
@@ -379,6 +395,7 @@ class MainActivity : AppCompatActivity() {
 
             imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .setTargetAspectRatio(aspectRatioValue)
                 .build()
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -387,7 +404,7 @@ class MainActivity : AppCompatActivity() {
                 cameraProvider.unbindAll()
                 camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageCapture)
-                Log.i(TAG, "Camera bound successfully")
+                Log.i(TAG, "Camera bound successfully with aspect ratio: $aspectRatio")
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
@@ -427,24 +444,77 @@ class MainActivity : AppCompatActivity() {
     private fun showSettingsDialog() {
         val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
         val keep = prefs.getBoolean("keep_intermediate", false)
+        val aspectRatio = prefs.getString("aspect_ratio", "full") ?: "full"
 
+        // Create main container
+        val mainContainer = LinearLayout(this)
+        mainContainer.orientation = LinearLayout.VERTICAL
+        val margin = (24 * resources.displayMetrics.density).toInt()
+        mainContainer.setPadding(margin, margin, margin, margin)
+
+        // Aspect Ratio section
+        val aspectRatioLabel = TextView(this)
+        aspectRatioLabel.text = getString(R.string.settings_aspect_ratio_title)
+        aspectRatioLabel.textSize = 16f
+        aspectRatioLabel.setTypeface(null, android.graphics.Typeface.BOLD)
+        aspectRatioLabel.setPadding(0, 0, 0, (8 * resources.displayMetrics.density).toInt())
+        mainContainer.addView(aspectRatioLabel)
+
+        val radioGroup = RadioGroup(this)
+        radioGroup.orientation = RadioGroup.VERTICAL
+        
+        val fullImageRadio = RadioButton(this)
+        fullImageRadio.text = getString(R.string.aspect_ratio_full_image)
+        fullImageRadio.id = android.view.View.generateViewId()
+        fullImageRadio.isChecked = aspectRatio == "full"
+        radioGroup.addView(fullImageRadio)
+
+        val wideCropRadio = RadioButton(this)
+        wideCropRadio.text = getString(R.string.aspect_ratio_wide_crop)
+        wideCropRadio.id = android.view.View.generateViewId()
+        wideCropRadio.isChecked = aspectRatio == "wide"
+        radioGroup.addView(wideCropRadio)
+
+        radioGroup.setOnCheckedChangeListener { _, checkedId ->
+            val newAspectRatio = when (checkedId) {
+                fullImageRadio.id -> "full"
+                wideCropRadio.id -> "wide"
+                else -> "full"
+            }
+            prefs.edit().putBoolean("aspect_ratio_changed", true).apply()
+            prefs.edit().putString("aspect_ratio", newAspectRatio).apply()
+        }
+
+        mainContainer.addView(radioGroup)
+
+        // Add spacing
+        val spacer = android.view.View(this)
+        spacer.layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            (16 * resources.displayMetrics.density).toInt()
+        )
+        mainContainer.addView(spacer)
+
+        // Keep intermediate pictures checkbox
         val checkBox = CheckBox(this)
-        checkBox.text = "Keep intermediate pictures"
+        checkBox.text = getString(R.string.settings_keep_intermediate)
         checkBox.isChecked = keep
         checkBox.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("keep_intermediate", isChecked).apply()
         }
-
-        val container = FrameLayout(this)
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        val margin = (24 * resources.displayMetrics.density).toInt()
-        params.setMargins(margin, margin, margin, margin)
-        container.addView(checkBox, params)
+        mainContainer.addView(checkBox)
 
         AlertDialog.Builder(this)
             .setTitle("Settings")
-            .setView(container)
-            .setPositiveButton("OK", null)
+            .setView(mainContainer)
+            .setPositiveButton("OK") { _, _ ->
+                // Check if aspect ratio changed and restart camera if needed
+                val aspectRatioChanged = prefs.getBoolean("aspect_ratio_changed", false)
+                if (aspectRatioChanged) {
+                    prefs.edit().putBoolean("aspect_ratio_changed", false).apply()
+                    startCamera()
+                }
+            }
             .show()
     }
 
