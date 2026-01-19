@@ -444,7 +444,7 @@ class MainActivity : AppCompatActivity() {
     private fun showSettingsDialog() {
         val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
         val keep = prefs.getBoolean("keep_intermediate", false)
-        val aspectRatio = prefs.getString("aspect_ratio", "full") ?: "full"
+        val originalAspectRatio = prefs.getString("aspect_ratio", "full") ?: "full"
 
         // Create main container
         val mainContainer = LinearLayout(this)
@@ -466,13 +466,13 @@ class MainActivity : AppCompatActivity() {
         val fullImageRadio = RadioButton(this)
         fullImageRadio.text = getString(R.string.aspect_ratio_full_image)
         fullImageRadio.id = android.view.View.generateViewId()
-        fullImageRadio.isChecked = aspectRatio == "full"
+        fullImageRadio.isChecked = originalAspectRatio == "full"
         radioGroup.addView(fullImageRadio)
 
         val wideCropRadio = RadioButton(this)
         wideCropRadio.text = getString(R.string.aspect_ratio_wide_crop)
         wideCropRadio.id = android.view.View.generateViewId()
-        wideCropRadio.isChecked = aspectRatio == "wide"
+        wideCropRadio.isChecked = originalAspectRatio == "wide"
         radioGroup.addView(wideCropRadio)
 
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
@@ -481,7 +481,6 @@ class MainActivity : AppCompatActivity() {
                 wideCropRadio.id -> "wide"
                 else -> "full"
             }
-            prefs.edit().putBoolean("aspect_ratio_changed", true).apply()
             prefs.edit().putString("aspect_ratio", newAspectRatio).apply()
         }
 
@@ -509,9 +508,8 @@ class MainActivity : AppCompatActivity() {
             .setView(mainContainer)
             .setPositiveButton("OK") { _, _ ->
                 // Check if aspect ratio changed and restart camera if needed
-                val aspectRatioChanged = prefs.getBoolean("aspect_ratio_changed", false)
-                if (aspectRatioChanged) {
-                    prefs.edit().putBoolean("aspect_ratio_changed", false).apply()
+                val currentAspectRatio = prefs.getString("aspect_ratio", "full") ?: "full"
+                if (currentAspectRatio != originalAspectRatio) {
                     startCamera()
                 }
             }
