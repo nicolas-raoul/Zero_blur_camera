@@ -443,11 +443,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun showSettingsDialog() {
         val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
-        val keep = prefs.getBoolean("keep_intermediate", false)
+        val originalKeepIntermediate = prefs.getBoolean("keep_intermediate", false)
         val originalAspectRatio = prefs.getString("aspect_ratio", "full")
         
-        // Track selected aspect ratio (will be saved on OK)
+        // Track selected values (will be saved on OK)
         var selectedAspectRatio = originalAspectRatio
+        var selectedKeepIntermediate = originalKeepIntermediate
 
         // Create main container
         val mainContainer = LinearLayout(this)
@@ -499,9 +500,9 @@ class MainActivity : AppCompatActivity() {
         // Keep intermediate pictures checkbox
         val checkBox = CheckBox(this)
         checkBox.text = getString(R.string.settings_keep_intermediate)
-        checkBox.isChecked = keep
+        checkBox.isChecked = originalKeepIntermediate
         checkBox.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("keep_intermediate", isChecked).apply()
+            selectedKeepIntermediate = isChecked
         }
         mainContainer.addView(checkBox)
 
@@ -509,10 +510,20 @@ class MainActivity : AppCompatActivity() {
             .setTitle(getString(R.string.settings_title))
             .setView(mainContainer)
             .setPositiveButton("OK") { _, _ ->
-                // Save aspect ratio preference if it changed
-                if (selectedAspectRatio != originalAspectRatio) {
-                    prefs.edit().putString("aspect_ratio", selectedAspectRatio).apply()
-                    startCamera()
+                // Save preferences if they changed
+                val prefsChanged = selectedAspectRatio != originalAspectRatio || 
+                                   selectedKeepIntermediate != originalKeepIntermediate
+                
+                if (prefsChanged) {
+                    prefs.edit().apply {
+                        putString("aspect_ratio", selectedAspectRatio)
+                        putBoolean("keep_intermediate", selectedKeepIntermediate)
+                    }.apply()
+                    
+                    // Restart camera if aspect ratio changed
+                    if (selectedAspectRatio != originalAspectRatio) {
+                        startCamera()
+                    }
                 }
             }
             .show()
