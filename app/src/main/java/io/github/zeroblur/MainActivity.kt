@@ -504,7 +504,7 @@ class MainActivity : AppCompatActivity() {
         mainContainer.addView(checkBox)
 
         AlertDialog.Builder(this)
-            .setTitle("Settings")
+            .setTitle(getString(R.string.settings_title))
             .setView(mainContainer)
             .setPositiveButton("OK") { _, _ ->
                 // Check if aspect ratio changed and restart camera if needed
