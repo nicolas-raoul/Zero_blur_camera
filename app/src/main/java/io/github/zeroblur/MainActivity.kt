@@ -377,7 +377,7 @@ class MainActivity : AppCompatActivity() {
 
             // Get aspect ratio preference
             val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
-            val aspectRatio = prefs.getString("aspect_ratio", "full") ?: "full"
+            val aspectRatio = prefs.getString("aspect_ratio", "full")
             
             // Set aspect ratio: 4:3 for full image, 16:9 for wide crop
             val aspectRatioValue = if (aspectRatio == "wide") {
@@ -444,7 +444,7 @@ class MainActivity : AppCompatActivity() {
     private fun showSettingsDialog() {
         val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
         val keep = prefs.getBoolean("keep_intermediate", false)
-        val originalAspectRatio = prefs.getString("aspect_ratio", "full") ?: "full"
+        val originalAspectRatio = prefs.getString("aspect_ratio", "full")
 
         // Create main container
         val mainContainer = LinearLayout(this)
@@ -508,7 +508,7 @@ class MainActivity : AppCompatActivity() {
             .setView(mainContainer)
             .setPositiveButton("OK") { _, _ ->
                 // Check if aspect ratio changed and restart camera if needed
-                val currentAspectRatio = prefs.getString("aspect_ratio", "full") ?: "full"
+                val currentAspectRatio = prefs.getString("aspect_ratio", "full")
                 if (currentAspectRatio != originalAspectRatio) {
                     startCamera()
                 }
