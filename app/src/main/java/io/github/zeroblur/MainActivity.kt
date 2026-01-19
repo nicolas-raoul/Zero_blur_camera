@@ -445,6 +445,9 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
         val keep = prefs.getBoolean("keep_intermediate", false)
         val originalAspectRatio = prefs.getString("aspect_ratio", "full")
+        
+        // Track selected aspect ratio (will be saved on OK)
+        var selectedAspectRatio = originalAspectRatio
 
         // Create main container
         val mainContainer = LinearLayout(this)
@@ -476,12 +479,11 @@ class MainActivity : AppCompatActivity() {
         radioGroup.addView(wideCropRadio)
 
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
-            val newAspectRatio = when (checkedId) {
+            selectedAspectRatio = when (checkedId) {
                 fullImageRadio.id -> "full"
                 wideCropRadio.id -> "wide"
                 else -> "full"
             }
-            prefs.edit().putString("aspect_ratio", newAspectRatio).apply()
         }
 
         mainContainer.addView(radioGroup)
@@ -507,9 +509,9 @@ class MainActivity : AppCompatActivity() {
             .setTitle(getString(R.string.settings_title))
             .setView(mainContainer)
             .setPositiveButton("OK") { _, _ ->
-                // Check if aspect ratio changed and restart camera if needed
-                val currentAspectRatio = prefs.getString("aspect_ratio", "full")
-                if (currentAspectRatio != originalAspectRatio) {
+                // Save aspect ratio preference if it changed
+                if (selectedAspectRatio != originalAspectRatio) {
+                    prefs.edit().putString("aspect_ratio", selectedAspectRatio).apply()
                     startCamera()
                 }
             }
