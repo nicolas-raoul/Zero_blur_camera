@@ -34,6 +34,7 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
@@ -59,6 +60,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    @ExperimentalCamera2Interop
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -111,6 +113,7 @@ class MainActivity : AppCompatActivity() {
     private var burstStartTime: Long = 0
     private val burstUris = mutableListOf<Uri>()
 
+    @ExperimentalCamera2Interop
     private fun takeFocusBurst() {
         Log.i(TAG, "takeFocusBurst called")
         val imageCapture = imageCapture
@@ -161,12 +164,13 @@ class MainActivity : AppCompatActivity() {
         captureStep(camera, 0, focusSteps)
     }
 
+    @ExperimentalCamera2Interop
     private fun captureStep(camera: androidx.camera.core.Camera, currentStep: Int, focusSteps: List<Float>) {
         if (currentStep >= focusSteps.size) {
             val duration = android.os.SystemClock.elapsedRealtime() - burstStartTime
             Log.d(TAG, "Burst duration: ${duration}ms")
             
-            // Reset to auto focus after burst
+            // Reset to autofocus after burst
             clearFocusOverride(camera)
             
             // Switch to "Focus Stacking" banner
@@ -350,6 +354,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @ExperimentalCamera2Interop
     private fun setFocusDistance(camera: androidx.camera.core.Camera, distance: Float) {
         val cameraControl = androidx.camera.camera2.interop.Camera2CameraControl.from(camera.cameraControl)
         val captureRequestOptions = androidx.camera.camera2.interop.CaptureRequestOptions.Builder()
@@ -359,11 +364,13 @@ class MainActivity : AppCompatActivity() {
         cameraControl.setCaptureRequestOptions(captureRequestOptions)
     }
 
+    @ExperimentalCamera2Interop
     private fun clearFocusOverride(camera: androidx.camera.core.Camera) {
         val cameraControl = androidx.camera.camera2.interop.Camera2CameraControl.from(camera.cameraControl)
         cameraControl.clearCaptureRequestOptions()
     }
 
+    @ExperimentalCamera2Interop
     private fun getMinimumFocusDistance(camera: androidx.camera.core.Camera): Float {
         val cameraInfo = androidx.camera.camera2.interop.Camera2CameraInfo.from(camera.cameraInfo)
         return cameraInfo.getCameraCharacteristic(android.hardware.camera2.CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) ?: 0.0f
