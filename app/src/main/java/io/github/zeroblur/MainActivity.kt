@@ -392,6 +392,15 @@ class MainActivity : AppCompatActivity() {
             } else {
                 androidx.camera.core.AspectRatio.RATIO_4_3
             }
+            
+            // Set PreviewView scale type based on aspect ratio mode
+            // FIT_CENTER for "full image" to show complete sensor area with letterboxing
+            // FILL_CENTER for "wide crop" to fill the screen (crops sensor output)
+            viewBinding.viewFinder.scaleType = if (aspectRatio == "wide") {
+                androidx.camera.view.PreviewView.ScaleType.FILL_CENTER
+            } else {
+                androidx.camera.view.PreviewView.ScaleType.FIT_CENTER
+            }
 
             val preview = Preview.Builder()
                 .setTargetAspectRatio(aspectRatioValue)
