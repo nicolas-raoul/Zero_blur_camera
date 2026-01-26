@@ -30,6 +30,10 @@ import android.widget.CheckBox
 import android.widget.FrameLayout
 import android.view.ViewGroup
 import android.content.Context
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 
 class MainActivity : AppCompatActivity() {
@@ -378,7 +382,28 @@ class MainActivity : AppCompatActivity() {
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
+            // Get aspect ratio preference
+            val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
+            val aspectRatio = prefs.getString("aspect_ratio", "full")
+            
+            // Set aspect ratio: 4:3 for full image, 16:9 for wide crop
+            val aspectRatioValue = if (aspectRatio == "wide") {
+                androidx.camera.core.AspectRatio.RATIO_16_9
+            } else {
+                androidx.camera.core.AspectRatio.RATIO_4_3
+            }
+            
+            // Set PreviewView scale type based on aspect ratio mode
+            // FIT_CENTER for "full image" to show complete sensor area with letterboxing
+            // FILL_CENTER for "wide crop" to fill the screen (crops sensor output)
+            viewBinding.viewFinder.scaleType = if (aspectRatio == "wide") {
+                androidx.camera.view.PreviewView.ScaleType.FILL_CENTER
+            } else {
+                androidx.camera.view.PreviewView.ScaleType.FIT_CENTER
+            }
+
             val preview = Preview.Builder()
+                .setTargetAspectRatio(aspectRatioValue)
                 .build()
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
@@ -386,6 +411,7 @@ class MainActivity : AppCompatActivity() {
 
             imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .setTargetAspectRatio(aspectRatioValue)
                 .build()
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -394,7 +420,7 @@ class MainActivity : AppCompatActivity() {
                 cameraProvider.unbindAll()
                 camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageCapture)
-                Log.i(TAG, "Camera bound successfully")
+                Log.i(TAG, "Camera bound successfully with aspect ratio: $aspectRatio")
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
             }
@@ -433,25 +459,89 @@ class MainActivity : AppCompatActivity() {
 
     private fun showSettingsDialog() {
         val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
-        val keep = prefs.getBoolean("keep_intermediate", false)
+        val originalKeepIntermediate = prefs.getBoolean("keep_intermediate", false)
+        val originalAspectRatio = prefs.getString("aspect_ratio", "full")
+        
+        // Track selected values (will be saved on OK)
+        var selectedAspectRatio = originalAspectRatio
+        var selectedKeepIntermediate = originalKeepIntermediate
 
-        val checkBox = CheckBox(this)
-        checkBox.text = "Keep intermediate pictures"
-        checkBox.isChecked = keep
-        checkBox.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("keep_intermediate", isChecked).apply()
+        // Create main container
+        val mainContainer = LinearLayout(this)
+        mainContainer.orientation = LinearLayout.VERTICAL
+        val margin = (24 * resources.displayMetrics.density).toInt()
+        mainContainer.setPadding(margin, margin, margin, margin)
+
+        // Aspect Ratio section
+        val aspectRatioLabel = TextView(this)
+        aspectRatioLabel.text = getString(R.string.settings_aspect_ratio_title)
+        aspectRatioLabel.textSize = 16f
+        aspectRatioLabel.setTypeface(null, android.graphics.Typeface.BOLD)
+        aspectRatioLabel.setPadding(0, 0, 0, (8 * resources.displayMetrics.density).toInt())
+        mainContainer.addView(aspectRatioLabel)
+
+        val radioGroup = RadioGroup(this)
+        radioGroup.orientation = RadioGroup.VERTICAL
+        
+        val fullImageRadio = RadioButton(this)
+        fullImageRadio.text = getString(R.string.aspect_ratio_full_image)
+        fullImageRadio.id = android.view.View.generateViewId()
+        fullImageRadio.isChecked = originalAspectRatio == "full"
+        radioGroup.addView(fullImageRadio)
+
+        val wideCropRadio = RadioButton(this)
+        wideCropRadio.text = getString(R.string.aspect_ratio_wide_crop)
+        wideCropRadio.id = android.view.View.generateViewId()
+        wideCropRadio.isChecked = originalAspectRatio == "wide"
+        radioGroup.addView(wideCropRadio)
+
+        radioGroup.setOnCheckedChangeListener { _, checkedId ->
+            selectedAspectRatio = when (checkedId) {
+                fullImageRadio.id -> "full"
+                wideCropRadio.id -> "wide"
+                else -> "full"
+            }
         }
 
-        val container = FrameLayout(this)
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        val margin = (24 * resources.displayMetrics.density).toInt()
-        params.setMargins(margin, margin, margin, margin)
-        container.addView(checkBox, params)
+        mainContainer.addView(radioGroup)
+
+        // Add spacing
+        val spacer = android.view.View(this)
+        spacer.layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            (16 * resources.displayMetrics.density).toInt()
+        )
+        mainContainer.addView(spacer)
+
+        // Keep intermediate pictures checkbox
+        val checkBox = CheckBox(this)
+        checkBox.text = getString(R.string.settings_keep_intermediate)
+        checkBox.isChecked = originalKeepIntermediate
+        checkBox.setOnCheckedChangeListener { _, isChecked ->
+            selectedKeepIntermediate = isChecked
+        }
+        mainContainer.addView(checkBox)
 
         AlertDialog.Builder(this)
-            .setTitle("Settings")
-            .setView(container)
-            .setPositiveButton("OK", null)
+            .setTitle(getString(R.string.settings_title))
+            .setView(mainContainer)
+            .setPositiveButton("OK") { _, _ ->
+                // Save preferences if they changed
+                val prefsChanged = selectedAspectRatio != originalAspectRatio || 
+                                   selectedKeepIntermediate != originalKeepIntermediate
+                
+                if (prefsChanged) {
+                    prefs.edit().apply {
+                        putString("aspect_ratio", selectedAspectRatio)
+                        putBoolean("keep_intermediate", selectedKeepIntermediate)
+                    }.apply()
+                    
+                    // Restart camera if aspect ratio changed
+                    if (selectedAspectRatio != originalAspectRatio) {
+                        startCamera()
+                    }
+                }
+            }
             .show()
     }
 
