@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "io.github.zeroblur"
-    compileSdk = 34
+    compileSdk = 36
     buildToolsVersion = "36.1.0"
 
     defaultConfig {
         applicationId = "io.github.zeroblur"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 1
+        targetSdk = 35
+        versionCode = 2
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
