@@ -4,6 +4,7 @@ testing/
 # Gradle files
 .gradle/
 build/
+app/release
 
 # Local configuration file (sdk.dir is not committed)
 local.properties
