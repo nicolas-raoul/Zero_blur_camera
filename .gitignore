@@ -1,3 +1,32 @@
+# User requested ignores
+testing/
+
+# Gradle files
 .gradle/
 build/
+
+# Local configuration file (sdk.dir is not committed)
 local.properties
+
+# Log files
+build_log.txt
+*.log
+
+# Heap dumps
+*.hprof
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Android specific
+captures/
+.externalNativeBuild/
+.cxx/
+
+# System files
+.DS_Store
+Thumbs.db
