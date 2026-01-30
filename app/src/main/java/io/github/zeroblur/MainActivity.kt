@@ -211,7 +211,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 // Cleanup intermediate pictures if needed
-                val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
+                val prefs = getSharedPreferences("ZeroBlurSettings", Context.MODE_PRIVATE)
                 val keep = prefs.getBoolean("keep_intermediate", false)
                 if (!keep && resultUri != null) {
                     burstUris.forEach { uri ->
@@ -271,7 +271,7 @@ class MainActivity : AppCompatActivity() {
     private fun takePhotoFast(index: Int, onCaptureTriggered: (Uri?) -> Unit) {
         val imageCapture = imageCapture ?: return
 
-        val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("ZeroBlurSettings", Context.MODE_PRIVATE)
         val keep = prefs.getBoolean("keep_intermediate", false)
 
         if (keep) {
@@ -417,7 +417,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val TAG = "ZeroBlur"
+        private const val TAG = "zeroblur"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
@@ -432,7 +432,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSettingsDialog() {
-        val prefs = getSharedPreferences("FocusESettings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("ZeroBlurSettings", Context.MODE_PRIVATE)
         val keep = prefs.getBoolean("keep_intermediate", false)
 
         val checkBox = CheckBox(this)

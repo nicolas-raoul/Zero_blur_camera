@@ -16,7 +16,7 @@ import java.util.ArrayList
 
 class FocusStacker(private val context: Context) {
 
-    private val TAG = "ZeroBlur"
+    private val TAG = "zeroblur"
 
     data class AlignedImage(val image: Mat)
 

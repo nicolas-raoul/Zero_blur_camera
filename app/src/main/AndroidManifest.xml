@@ -13,14 +13,14 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.FocusE"
+        android:theme="@style/Theme.ZeroBlur"
         android:extractNativeLibs="true"
         tools:targetApi="35">
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.FocusE">
+            android:theme="@style/Theme.ZeroBlur">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

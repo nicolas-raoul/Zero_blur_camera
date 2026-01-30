@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "FocusE"
+rootProject.name = "ZeroBlur"
 include(":app")
