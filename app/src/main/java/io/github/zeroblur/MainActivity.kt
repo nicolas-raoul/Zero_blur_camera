@@ -22,7 +22,6 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.io.File
 import android.net.Uri
-import androidx.core.app.ActivityCompat
 import androidx.camera.core.ImageProxy
 import java.util.concurrent.Executors
 import android.app.AlertDialog
@@ -74,9 +73,7 @@ class MainActivity : AppCompatActivity() {
         if (allPermissionsGranted()) {
             startCamera()
         } else {
-            ActivityCompat.requestPermissions(
-                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
-            )
+            requestPermissions()
         }
 
         viewBinding.imageCaptureButton.setOnClickListener { takeFocusBurst() }
@@ -419,7 +416,6 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "zeroblur"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,
